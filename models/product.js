@@ -1,72 +1,30 @@
-const e = require('express');
-const fs = require('fs');
-const path = require('path');
+const { Sequelize } = require('sequelize');
 
-const Cart = require('./cart');
+const sequelize = require('../util/database');
 
-const p = path.join(
-    path.dirname(require.main.filename), 
-    'data', 
-    'products.json'
-);
-
-const getProductsFromFile = cb => {
-    fs.readFile(p, (err, data) => {
-        if(err || data.length === 0) {
-            return cb([]);
-        }
-        cb(JSON.parse(data));
-    });
-}
-
-module.exports = class Product {
-    constructor(id, title, imageURL, description, price) {
-        this.id = id;
-        this.title = title;
-        this.imageURL = imageURL;
-        this.description = description;
-        this.price = price;
+const Product = sequelize.define('product', {
+    id: {
+        type: Sequelize.INTEGER,
+        autoIncrement: true,
+        allowNull: false,
+        primaryKey: true
+    },
+    title: {
+        type: Sequelize.STRING,
+        allowNull: false
+    },
+    price: {
+        type: Sequelize.DOUBLE,
+        allowNull: false
+    },
+    imageURL: {
+        type: Sequelize.STRING,
+        allowNull: false
+    },
+    description: {
+        type: Sequelize.STRING,
+        allowNull: false
     }
+});
 
-    save() {
-        getProductsFromFile(products => {
-            if(this.id) {
-                const existingProductIndex = products.findIndex(prod => prod.id === this.id);
-                products[existingProductIndex] = this;
-                fs.writeFile(p, JSON.stringify(products), (err) => {
-                    console.log(err);
-                });
-            } else {
-                this.id = Math.random().toString();
-                products.push(this); //because we are using an arrow function, 'this' refers to the class
-                fs.writeFile(p, JSON.stringify(products), (err) => {
-                    console.log(err);
-                });
-            }
-        });
-    }
-
-    static delete(id) {
-        getProductsFromFile(products => {
-            const product = products.find(prod => prod.id === id);
-            const updatedProducts = products.filter(prod => prod.id !== id); //filter returns all elements in the array where the function returns true
-            fs.writeFile(p, JSON.stringify(updatedProducts), (err) => {
-                if(!err) {
-                    return Cart.deleteProduct(id, product.price);
-                }
-                console.log(err);
-            });
-        });
-    }
-
-    static fetchAll(cb) { //static allows you to call the method on the class itself, not just on an instantiated object of the class
-        getProductsFromFile(cb);
-    }
-
-    static findByID(id, cb) {
-        getProductsFromFile(products => {
-            const product = products.find(p => p.id === id);
-            cb(product);
-        });
-    }
-}
+module.exports = Product;
