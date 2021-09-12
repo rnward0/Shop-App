@@ -1,10 +1,16 @@
 const mongodb = require('mongodb');
 const getDb = require('../util/database').getDb;
 
+//User list:
+// ryan@test.com -- password
+// new-user@email.com -- mypass
+// bob@bob.com -- bobspass
+
+
 class User {
-    constructor(username, email, cart, id) {
-        this.name = username;
+    constructor(email, password, cart, id) {
         this.email = email;
+        this.password = password;
         this.cart = cart; // { items: [] }
         this._id = id;
     }
@@ -65,8 +71,8 @@ class User {
                 const order = {
                     items: products,
                     user: {
+                        email: this.email,
                         _id: new mongodb.ObjectId(this._id),
-                        name: this.name
                     }
                 };
                 return db.collection('orders').insertOne(order);
